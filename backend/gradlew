@@ -1,0 +1,46 @@
+#!/bin/sh
+
+#
+# Gradle start up script for POSIX
+#
+
+# Resolve links
+app_path=$0
+while [ -h "$app_path" ]; do
+  ls=$(ls -ld "$app_path")
+  link=${ls#*' -> '}
+  case $link in
+    /*) app_path=$link ;;
+    *) app_path=$(dirname "$app_path")/$link ;;
+  esac
+done
+APP_HOME=$(cd "$(dirname "$app_path")" && pwd -P)
+APP_NAME="Gradle"
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
+# Use the maximum available, or set MAX_FD != -1 to use that value.
+MAX_FD=maximum
+warn () { echo "$*" >&2; }
+die () { echo "$*" >&2; exit 1; }
+
+# OS specific support
+case "$(uname)" in
+  Darwin*)
+    if [ -z "$JAVA_HOME" ]; then
+      JAVA_HOME=$(/usr/libexec/java_home 2>/dev/null)
+    fi
+    ;;
+esac
+
+# Determine the Java command
+if [ -n "$JAVA_HOME" ]; then
+  JAVACMD="$JAVA_HOME/bin/java"
+else
+  JAVACMD="java"
+fi
+
+exec "$JAVACMD" \
+  -Dorg.gradle.appname="$APP_NAME" \
+  -classpath "$CLASSPATH" \
+  org.gradle.wrapper.GradleWrapperMain \
+  "$@"

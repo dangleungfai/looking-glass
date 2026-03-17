@@ -1,0 +1,18 @@
+# Sample Prometheus alert rules for Looking Glass (use with your Prometheus server)
+groups:
+  - name: lookingglass
+    rules:
+      - alert: LookingGlassHighFailureRate
+        expr: rate(lookingglass_query_total{status="FAILED"}[5m]) / rate(lookingglass_query_total[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Looking Glass query failure rate high"
+      - alert: LookingGlassRateLimitExceeded
+        expr: increase(lookingglass_rate_limit_exceeded_total[1h]) > 100
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "High rate limit hits in last hour"
