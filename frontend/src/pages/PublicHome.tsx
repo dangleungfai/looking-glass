@@ -169,23 +169,24 @@ export const PublicHome: React.FC = () => {
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img
-              src={logoUrl}
-              alt="logo"
-              style={{
-                width: 128,
-                height: 32,
-                borderRadius: 0,
-                objectFit: 'fill',
-                background: 'transparent',
-                display: 'block',
-              }}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            {!hasCustomLogo && <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: 0.4 }}>{systemName}</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: hasCustomLogo ? 8 : 0 }}>
+            {hasCustomLogo ? (
+              <img
+                src={logoUrl}
+                alt="logo"
+                style={{
+                  width: 128,
+                  height: 32,
+                  borderRadius: 0,
+                  objectFit: 'fill',
+                  background: 'transparent',
+                  display: 'block',
+                }}
+                onError={() => setHasCustomLogo(false)}
+              />
+            ) : (
+              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: 0.4 }}>{systemName}</span>
+            )}
           </div>
           <Button
             size="small"
@@ -326,7 +327,7 @@ export const PublicHome: React.FC = () => {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                    {systemName || 'ISP Looking Glass'}
+                    {systemName || 'LOOKING GLASS'}
               </div>
               <Text style={{ color: '#424245', fontSize: 18, lineHeight: 1.65, maxWidth: 900 }}>
                 {systemName} 提供从骨干网视角出发的实时诊断能力。你可以快速对路由路径、连通性与时延进行观测，

@@ -11,6 +11,7 @@ const { Header, Content, Footer } = Layout;
 const linkStyle: React.CSSProperties = { textDecoration: 'none' };
 
 const adminMenus = [
+  { key: '/home', label: <a href="/" target="_blank" rel="noopener noreferrer" style={linkStyle}>首页</a> },
   { key: '/admin', label: <Link to="/admin" style={linkStyle}>概览</Link> },
   { key: '/admin/pops', label: <Link to="/admin/pops" style={linkStyle}>POP 管理</Link> },
   { key: '/admin/devices', label: <Link to="/admin/devices" style={linkStyle}>设备管理</Link> },
@@ -107,27 +108,26 @@ export const AdminLayout: React.FC = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
+              gap: hasCustomLogo ? 12 : 0,
               flexShrink: 0,
             }}
           >
-            <img
-              src={logoUrl}
-              alt="logo"
-              style={{
-                width: 128,
-                height: 32,
-                borderRadius: 0,
-                objectFit: 'fill',
-                background: 'transparent',
-                flexShrink: 0,
-                display: 'block',
-              }}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            {!hasCustomLogo && (
+            {hasCustomLogo ? (
+              <img
+                src={logoUrl}
+                alt="logo"
+                style={{
+                  width: 128,
+                  height: 32,
+                  borderRadius: 0,
+                  objectFit: 'fill',
+                  background: 'transparent',
+                  flexShrink: 0,
+                  display: 'block',
+                }}
+                onError={() => setHasCustomLogo(false)}
+              />
+            ) : (
               <span
                 style={{
                   fontSize: 15,
