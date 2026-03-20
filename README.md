@@ -10,6 +10,117 @@
 - **数据库**: MySQL 8 / MariaDB 10.6+
 - **监控**: Actuator + Prometheus 指标
 
+## 运行环境要求
+
+建议在以下系统运行：
+
+- macOS 13+ / 14+ / 15+
+- Ubuntu 20.04+ / Debian 11+
+- CentOS Stream 8+ / RHEL 8+
+- Windows 11（建议使用 WSL2）
+
+基础依赖建议版本：
+
+- Git 2.30+
+- Docker Engine / Docker Desktop 24+
+- Docker Compose v2+
+- OpenSSL 1.1.1+（或 3.x）
+- Node.js 20+（仅本地开发前端需要）
+- Python 3.11+（仅本地开发 Worker 需要）
+- Java 17+（仅本地开发后端需要）
+
+## 安装 Git
+
+### macOS
+
+```bash
+# 方式 1: 使用 Homebrew
+brew install git
+
+# 方式 2: 安装 Xcode Command Line Tools（会附带 git）
+xcode-select --install
+```
+
+### Ubuntu / Debian
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git
+```
+
+### CentOS / RHEL / Rocky / AlmaLinux
+
+```bash
+sudo dnf install -y git
+# 老系统可用: sudo yum install -y git
+```
+
+### Windows
+
+- 安装 [Git for Windows](https://git-scm.com/download/win)
+- 或在 WSL2 中按 Ubuntu 方式安装
+
+安装后可检查版本：
+
+```bash
+git --version
+```
+
+## 克隆代码（Git）
+
+### SSH 方式（推荐）
+
+```bash
+git clone git@github.com:dangleungfai/looking-glass.git
+cd looking-glass
+```
+
+#### 首次使用 SSH 克隆（GitHub SSH Key 配置）
+
+1. 生成 SSH Key（建议 ed25519）：
+
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+2. 启动 ssh-agent 并添加私钥：
+
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+```
+
+3. 复制公钥内容并添加到 GitHub：
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+将输出内容复制到 GitHub：  
+`Settings -> SSH and GPG keys -> New SSH key`
+
+4. 测试 SSH 连通性：
+
+```bash
+ssh -T git@github.com
+```
+
+若看到类似 `Hi <username>! You've successfully authenticated...` 即配置成功。
+
+5. 使用 SSH 地址克隆：
+
+```bash
+git clone git@github.com:dangleungfai/looking-glass.git
+cd looking-glass
+```
+
+### HTTPS 方式
+
+```bash
+git clone https://github.com/dangleungfai/looking-glass.git
+cd looking-glass
+```
+
 ## 目录结构
 
 ```
