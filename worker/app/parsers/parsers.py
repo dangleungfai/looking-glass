@@ -41,10 +41,10 @@ def parse_bgp_prefix(raw: str) -> dict[str, Any]:
 
 
 def parse_output(query_type: str, raw: str) -> dict[str, Any]:
-    if query_type == "PING":
+    if query_type in ("PING", "IPV4_PING", "IPV6_PING"):
         return parse_ping(raw)
-    if query_type == "TRACEROUTE":
+    if query_type in ("TRACEROUTE", "IPV4_TRACEROUTE", "IPV6_TRACEROUTE"):
         return parse_traceroute(raw)
-    if query_type in ("BGP_PREFIX", "BGP_ASN", "ROUTE_LOOKUP"):
+    if query_type in ("BGP_PREFIX", "BGP_ASN", "ROUTE_LOOKUP", "IPV4_BGP_ROUTE", "IPV6_BGP_ROUTE"):
         return parse_bgp_prefix(raw)
     return {"raw_text": raw}

@@ -24,6 +24,9 @@ public class User {
     @Column(name = "mobile", length = 32)
     private String mobile;
 
+    @Column(name = "user_type", nullable = false, length = 16)
+    private String userType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
@@ -78,6 +81,14 @@ public class User {
 
     public void setMobile(String mobile) {
         this.mobile = mobile;
+    }
+
+    public String getUserType() {
+        return userType;
+    }
+
+    public void setUserType(String userType) {
+        this.userType = userType;
     }
 
     public Role getRole() {

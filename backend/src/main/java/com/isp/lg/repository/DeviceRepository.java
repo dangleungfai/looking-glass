@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface DeviceRepository extends JpaRepository<Device, Long> {
     Optional<Device> findByDeviceCode(String deviceCode);
     List<Device> findByPopIdAndStatusOrderByPriorityDesc(Long popId, Integer status);
+    long countByPopId(Long popId);
 }

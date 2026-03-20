@@ -29,6 +29,8 @@ dependencies {
 
     runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
 
+    implementation("com.unboundid:unboundid-ldapsdk:6.0.11")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

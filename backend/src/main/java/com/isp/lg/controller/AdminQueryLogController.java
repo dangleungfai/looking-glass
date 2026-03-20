@@ -19,7 +19,7 @@ public class AdminQueryLogController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'NETWORK_ADMIN', 'READONLY_ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'READONLY')")
     public ResponseEntity<Page<QueryLog>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

@@ -27,11 +27,57 @@ export async function getQueryTypes() {
   return res.json();
 }
 
+export async function getSystemName() {
+  const res = await fetch(`${API_BASE}/public/system-name`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error('Failed to fetch system name');
+  return (data as { systemName?: string }).systemName || 'LOOKING GLASS';
+}
+
+export async function getPublicUiConfig() {
+  const res = await fetch(`${API_BASE}/public/system-name`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error('Failed to fetch public ui config');
+  const parsed = data as {
+    systemName?: string;
+    showPopCode?: boolean;
+    footerText?: string;
+    homeIntroText?: string;
+    logoUrl?: string;
+    hasCustomLogo?: boolean;
+    clientIp?: string;
+    captchaEnabled?: boolean;
+  };
+  return {
+    systemName: parsed.systemName || 'LOOKING GLASS',
+    showPopCode: parsed.showPopCode !== false,
+    footerText: parsed.footerText || '',
+    homeIntroText: parsed.homeIntroText || '',
+    logoUrl: parsed.logoUrl || '/api/public/logo',
+    hasCustomLogo: parsed.hasCustomLogo === true,
+    clientIp: parsed.clientIp || '',
+    captchaEnabled: parsed.captchaEnabled === true,
+  };
+}
+
+export async function getPublicCaptcha() {
+  const res = await fetch(`${API_BASE}/public/captcha`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error('Failed to fetch captcha');
+  const parsed = data as { enabled?: boolean; captchaId?: string; question?: string };
+  return {
+    enabled: parsed.enabled === true,
+    captchaId: parsed.captchaId || '',
+    question: parsed.question || '',
+  };
+}
+
 export async function submitQuery(body: {
   popCode: string;
   queryType: string;
   target: string;
   params?: Record<string, unknown>;
+  captchaToken?: string;
 }) {
   const res = await fetch(`${API_BASE}/public/query`, {
     method: 'POST',
@@ -63,6 +109,7 @@ async function authJson<T>(url: string, options: RequestInit = {}): Promise<T> {
       // token 失效或无权限，清空并跳转登录页
       localStorage.removeItem('token');
       localStorage.removeItem('username');
+      localStorage.removeItem('lg_role');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
@@ -74,7 +121,7 @@ async function authJson<T>(url: string, options: RequestInit = {}): Promise<T> {
 
 export const admin = {
   pops: {
-    list: () => authJson<unknown[]>(`${API_BASE}/admin/pops`),
+    list: () => authJson<any[]>(`${API_BASE}/admin/pops`),
     create: (body: Record<string, unknown>) =>
       authFetch(`${API_BASE}/admin/pops`, { method: 'POST', body: JSON.stringify(body) }).then((r) => r.json()),
     update: (id: number, body: Record<string, unknown>) =>
@@ -83,16 +130,33 @@ export const admin = {
       authFetch(`${API_BASE}/admin/pops/${id}`, { method: 'DELETE' }).then((r) => r.json()),
   },
   devices: {
-    list: () => authJson<unknown[]>(`${API_BASE}/admin/devices`),
+    list: () => authJson<any[]>(`${API_BASE}/admin/devices`),
     create: (body: Record<string, unknown>) =>
       authFetch(`${API_BASE}/admin/devices`, { method: 'POST', body: JSON.stringify(body) }).then((r) => r.json()),
     update: (id: number, body: Record<string, unknown>) =>
       authFetch(`${API_BASE}/admin/devices/${id}`, { method: 'PUT', body: JSON.stringify(body) }).then((r) => r.json()),
+    updateStatus: (id: number, status: number) =>
+      authFetch(`${API_BASE}/admin/devices/${id}/status`, { method: 'POST', body: JSON.stringify({ status }) }).then((r) => r.json()),
+    loginTest: (id: number, body: { command: string; username?: string; password?: string }) =>
+      authJson<{
+        requestId: string;
+        deviceId: number;
+        deviceName: string;
+        mgmtIp: string;
+        command: string;
+        status: string;
+        durationMs?: number;
+        output?: string;
+        errorMessage?: string;
+      }>(`${API_BASE}/admin/devices/${id}/login-test`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
     delete: (id: number) =>
       authFetch(`${API_BASE}/admin/devices/${id}`, { method: 'DELETE' }).then((r) => r.json()),
   },
   templates: {
-    list: () => authJson<unknown[]>(`${API_BASE}/admin/command-templates`),
+    list: () => authJson<any[]>(`${API_BASE}/admin/command-templates`),
     create: (body: Record<string, unknown>) =>
       authFetch(`${API_BASE}/admin/command-templates`, { method: 'POST', body: JSON.stringify(body) }).then((r) => r.json()),
     update: (id: number, body: Record<string, unknown>) =>
@@ -102,14 +166,134 @@ export const admin = {
   },
   queryLogs: {
     list: (page = 0, size = 20) =>
-      authJson<{ content: unknown[]; totalElements: number }>(`${API_BASE}/admin/query-logs?page=${page}&size=${size}`),
+      authJson<{ content: any[]; totalElements: number }>(`${API_BASE}/admin/query-logs?page=${page}&size=${size}`),
   },
-  settings: {
-    list: () => authJson<unknown[]>(`${API_BASE}/admin/settings`),
-    update: (key: string, value: string) =>
-      authFetch(`${API_BASE}/admin/settings/${encodeURIComponent(key)}`, {
-        method: 'PUT',
-        body: JSON.stringify({ settingValue: value }),
-      }).then((r) => r.json()),
+  dashboard: {
+    visualization: (days = 7, securityHours = 24) =>
+      authJson<{
+        days: number;
+        trend: { bucket: string; total: number; success: number; failed: number }[];
+        topTargets: { target: string; count: number }[];
+        security: {
+          hours: number;
+          totalQueries: number;
+          failedQueries: number;
+          successRate: number;
+          uniqueSourceIps: number;
+          blacklistActive: number;
+          ldapUsers: number;
+          localUsers: number;
+          topFailSourceIps: { sourceIp: string; count: number }[];
+        };
+      }>(`${API_BASE}/admin/dashboard/visualization?days=${days}&securityHours=${securityHours}`),
   },
+  users: {
+    list: () => authJson<
+      {
+        id: number;
+        username: string;
+        email?: string;
+        mobile?: string;
+        userType?: string;
+        roleCode: string;
+        roleName?: string;
+        status: number;
+        createdAt?: string;
+        updatedAt?: string;
+      }[]
+    >(`${API_BASE}/admin/users`),
+    create: (body: Record<string, unknown>) =>
+      authJson<unknown>(`${API_BASE}/admin/users`, { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: number, body: Record<string, unknown>) =>
+      authJson<unknown>(`${API_BASE}/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    delete: (id: number) =>
+      authJson<{ ok?: boolean }>(`${API_BASE}/admin/users/${id}`, { method: 'DELETE' }),
+  },
+  roles: {
+    list: () => authJson<{ id: number; roleCode: string; roleName: string }[]>(`${API_BASE}/admin/roles`),
+  },
+  ldap: {
+    testConnection: () =>
+      authJson<{ success: boolean; message?: string; error?: string }>(`${API_BASE}/admin/ldap/test-connection`, {
+        method: 'POST',
+      }),
+    testUser: (body: { testUsername: string; testPassword: string }) =>
+      authJson<{ success: boolean; message?: string; error?: string }>(`${API_BASE}/admin/ldap/test-user`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+  },
+  systemAssets: {
+    uploadLogo: async (file: File) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      return authJson<{ ok: boolean; message?: string }>(`${API_BASE}/admin/system-assets/logo`, {
+        method: 'POST',
+        body: fd,
+      });
+    },
+    resetLogo: () =>
+      authJson<{ ok: boolean; message?: string }>(`${API_BASE}/admin/system-assets/logo`, {
+        method: 'DELETE',
+      }),
+    uploadNginxSsl: async (fullchain: File, privkey: File) => {
+      const fd = new FormData();
+      fd.append('fullchain', fullchain);
+      fd.append('privkey', privkey);
+      return authJson<{ ok: boolean; message?: string }>(`${API_BASE}/admin/system-assets/nginx-ssl/upload`, {
+        method: 'POST',
+        body: fd,
+      });
+    },
+    resetNginxSelfSigned: () =>
+      authJson<{ ok: boolean; message?: string }>(`${API_BASE}/admin/system-assets/nginx-ssl/reset-self-signed`, {
+        method: 'POST',
+      }),
+  },
+};
+
+export interface SystemSettingsDto {
+  general: {
+    systemName: string;
+    showPopCode: boolean;
+    footerText: string;
+    homeIntroText: string;
+  };
+  deviceDefaults: {
+    authType: string;
+    username: string;
+    password: string;
+    sshPort: number;
+    telnetPort: number;
+    timeoutSec: number;
+    maxConcurrency: number;
+  };
+  rateLimit: {
+    perIpPerMinute: number;
+  };
+  security: {
+    captchaEnabled: boolean;
+    logRetainDays: number;
+  };
+  ldap: {
+    enabled: boolean;
+    serverUrl: string;
+    useTls: boolean;
+    baseDn: string;
+    bindDn: string;
+    bindPassword: string;
+    userSearchBase: string;
+    userSearchFilter: string;
+    connectTimeoutMs: number;
+    allowLocalFallback: boolean;
+  };
+}
+
+export const systemSettings = {
+  get: () => authJson<SystemSettingsDto>(`${API_BASE}/admin/system-settings`),
+  update: (body: SystemSettingsDto) =>
+    authJson<SystemSettingsDto>(`${API_BASE}/admin/system-settings`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
 };

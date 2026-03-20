@@ -9,6 +9,7 @@ public class DeviceDto {
     private String osType;
     private String mgmtIp;
     private Integer sshPort;
+    private String authType;
     private String username;
     private Integer status;
     private Integer priority;
@@ -31,6 +32,8 @@ public class DeviceDto {
     public void setMgmtIp(String mgmtIp) { this.mgmtIp = mgmtIp; }
     public Integer getSshPort() { return sshPort; }
     public void setSshPort(Integer sshPort) { this.sshPort = sshPort; }
+    public String getAuthType() { return authType; }
+    public void setAuthType(String authType) { this.authType = authType; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public Integer getStatus() { return status; }

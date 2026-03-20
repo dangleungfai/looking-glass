@@ -22,7 +22,36 @@ looking-glass/
 └── README.md
 ```
 
-## 快速开始（本地）
+## 一键部署（推荐）
+
+> 一条命令完成：依赖检查/安装（尽力而为）+ 自签名证书生成 + 前端构建 + Docker Compose 启动。
+
+```bash
+chmod +x scripts/local-deploy.sh
+./scripts/local-deploy.sh
+```
+
+部署完成后：
+
+- 访问 `https://localhost`
+- 访问 `http://localhost` 会自动 `301` 跳转到 HTTPS
+- 默认使用自签名证书（脚本首次自动生成）
+- 证书路径：`nginx/certs/fullchain.pem` 与 `nginx/certs/privkey.pem`
+- 默认账号：`admin / admin123`
+
+### 自签名证书策略
+
+- 首次部署若未检测到证书，脚本会自动生成证书
+- 证书有效期：`36500` 天（约 100 年，当前常见工具链支持下的“最长年限”）
+- 如需替换正式证书，直接覆盖：
+
+```bash
+cp /path/to/fullchain.pem nginx/certs/fullchain.pem
+cp /path/to/privkey.pem nginx/certs/privkey.pem
+docker compose restart frontend
+```
+
+## 快速开始（本地开发）
 
 ### 1. 数据库
 
@@ -68,25 +97,37 @@ npm run dev
 
 浏览器访问：公网首页 `http://localhost:3000`，后台 `http://localhost:3000/admin`（需先登录）。
 
-## Docker Compose
+## Docker Compose（手动方式）
 
-1. 构建前端静态资源与后端 jar（或使用 Dockerfile 内 Gradle 构建）：
+若你不使用一键脚本，也可手动执行：
+
+1. 准备证书（可用正式证书，或自签名）：
+
+```bash
+mkdir -p nginx/certs
+openssl req -x509 -newkey rsa:4096 -sha256 -nodes -days 36500 \
+  -keyout nginx/certs/privkey.pem \
+  -out nginx/certs/fullchain.pem \
+  -subj "/C=CN/ST=Default/L=Default/O=LOOKING GLASS/OU=DevOps/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
+2. 构建前端静态资源：
 
 ```bash
 cd frontend && npm ci && npm run build && cd ..
-cd backend && gradle bootJar -x test && cd ..
 ```
 
-2. 启动：
+3. 启动：
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-- 公网/后台: `http://localhost:3000`（Nginx 反代后端 API）
-- 后端 API: `http://localhost:8080`
-- Worker: `http://localhost:8000`
-- MySQL: `localhost:3306`，库 `looking_glass`，用户 `lg_user` / `lg_password`
+- 公网/后台：`https://localhost`（80 自动跳转到 443）
+- 后端 API：`http://backend:8080`（仅容器网络内可见）
+- Worker：`http://localhost:8000`
+- MySQL：`localhost:3306`，库 `looking_glass`，用户 `lg_user` / `lg_password`
 
 ## 主要 API
 
@@ -100,12 +141,12 @@ docker compose up -d
   - `GET/POST/PUT/DELETE /api/admin/devices` 设备管理  
   - `GET/POST/PUT/DELETE /api/admin/command-templates` 命令模板  
   - `GET /api/admin/query-logs` 查询日志  
-  - `GET /api/admin/settings`、`PUT /api/admin/settings/{key}` 系统设置  
+  - `GET/PUT /api/admin/system-settings` 系统设置  
 - 监控: `GET /actuator/prometheus` Prometheus 指标
 
 ## 安全与限流
 
-- 公网查询：按 IP 每分钟请求数限流（可在系统设置中配置 `rate_limit_per_minute`）
+- 公网查询：按 IP 每分钟请求数限流（可在系统设置中配置 `system_rate_limit`）
 - 黑名单：在 `ip_blacklist` 表配置 IP/CIDR，生效后该来源禁止访问公网查询
 - 命令通过模板与参数校验生成，禁止前端传入任意命令片段
 - 设备密码仅用于 Worker 执行，接口不返回

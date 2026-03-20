@@ -18,7 +18,7 @@ public class ApiInfoController {
     @GetMapping("/info")
     public ResponseEntity<Map<String, String>> info() {
         return ResponseEntity.ok(Map.of(
-                "name", "ISP Looking Glass",
+                "name", "LOOKING GLASS",
                 "version", "1.0",
                 "docs", "See README for public query API (POST /api/public/query). Future: authenticated API with key."
         ));

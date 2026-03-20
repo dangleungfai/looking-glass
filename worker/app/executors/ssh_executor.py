@@ -5,6 +5,7 @@ import time
 from typing import Optional
 
 import paramiko
+from paramiko.ssh_exception import AuthenticationException, NoValidConnectionsError
 
 
 def execute(
@@ -45,13 +46,61 @@ def execute(
         chan.get_pty(width=256)
         chan.exec_command(command)
 
-        stdout = chan.recv(65535).decode("utf-8", errors="replace")
-        stderr = chan.recv_stderr(65535).decode("utf-8", errors="replace")
+        stdout_chunks: list[str] = []
+        stderr_chunks: list[str] = []
+
+        # 循环读取，直到通道关闭或超时
+        end_time = time.time() + timeout_sec
+        while True:
+            if chan.recv_ready():
+                data = chan.recv(65535)
+                if not data:
+                    break
+                stdout_chunks.append(data.decode("utf-8", errors="replace"))
+            if chan.recv_stderr_ready():
+                data = chan.recv_stderr(65535)
+                if not data:
+                    break
+                stderr_chunks.append(data.decode("utf-8", errors="replace"))
+            if chan.exit_status_ready():
+                # 再尝试把缓冲区读干净
+                while chan.recv_ready():
+                    data = chan.recv(65535)
+                    if not data:
+                        break
+                    stdout_chunks.append(data.decode("utf-8", errors="replace"))
+                while chan.recv_stderr_ready():
+                    data = chan.recv_stderr(65535)
+                    if not data:
+                        break
+                    stderr_chunks.append(data.decode("utf-8", errors="replace"))
+                break
+            if time.time() > end_time:
+                raise socket.timeout("SSH read timeout")
+            # 避免 busy loop
+            time.sleep(0.05)
+
         chan.close()
-        out = (stdout + "\n" + stderr).strip()
+        stdout = "".join(stdout_chunks)
+        stderr = "".join(stderr_chunks)
+        out = (stdout + ("\n" + stderr if stderr else "")).strip()
         return out, None
+    except AuthenticationException:
+        return "", "AUTHENTICATION_FAILED: username/password rejected by device"
+    except NoValidConnectionsError as e:
+        # Usually means TCP unreachable/refused for target port.
+        return "", f"PORT_UNREACHABLE: cannot connect to {host}:{port} ({e!s})"
     except socket.timeout:
-        return "", "SSH connection timeout"
+        return "", f"NETWORK_TIMEOUT: timeout connecting to {host}:{port}"
+    except socket.gaierror as e:
+        return "", f"DNS_RESOLVE_FAILED: {e!s}"
+    except OSError as e:
+        msg = str(e).lower()
+        if "no route to host" in msg or "network is unreachable" in msg:
+            return "", f"NETWORK_UNREACHABLE: {e!s}"
+        if "connection refused" in msg:
+            return "", f"PORT_REFUSED: {e!s}"
+        return "", f"NETWORK_ERROR: {e!s}"
     except paramiko.SSHException as e:
         return "", f"SSH error: {e!s}"
     except Exception as e:

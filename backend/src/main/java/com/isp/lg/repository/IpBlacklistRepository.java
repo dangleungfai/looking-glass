@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface IpBlacklistRepository extends JpaRepository<IpBlacklist, Long> {
     List<IpBlacklist> findByStatus(Integer status);
+
+    long countByStatus(Integer status);
 }

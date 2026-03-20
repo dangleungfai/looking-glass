@@ -1,73 +1,154 @@
 #!/bin/bash
-# ISP Looking Glass 本地部署脚本
-# 使用前请先执行「步骤 1」中的 MySQL 命令（需输入你的 MySQL root 密码）
+# ISP Looking Glass 一键部署脚本（Docker + HTTPS）
+# 功能：
+# 1) 自动安装所需系统依赖（Docker / Docker Compose / OpenSSL，尽力而为）
+# 2) 自动构建前端静态资源
+# 3) 默认生成最长年限自签名证书（100 年，36500 天）
+# 4) 一键启动全部服务（HTTP 自动 301 跳转 HTTPS）
 
-set -e
+set -euo pipefail
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo "=== 步骤 1: MySQL（需手动执行一次）==="
-echo "若尚未创建库与表，请在本机执行（将 YOUR_MYSQL_PASSWORD 换成实际密码）："
-echo ""
-echo "  mysql -u root -p -e \"CREATE DATABASE IF NOT EXISTS looking_glass CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\""
-echo "  mysql -u root -p looking_glass < $ROOT/backend/db/schema.sql"
-echo "  mysql -u root -p looking_glass < $ROOT/backend/db/seed.sql"
-echo ""
-read -p "已完成上述 MySQL 步骤？(y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "请先完成 MySQL 初始化后重新运行本脚本。"
+CERT_DIR="$ROOT/nginx/certs"
+CERT_FILE="$CERT_DIR/fullchain.pem"
+KEY_FILE="$CERT_DIR/privkey.pem"
+
+info() { echo -e "[INFO] $*"; }
+warn() { echo -e "[WARN] $*"; }
+err()  { echo -e "[ERROR] $*"; }
+
+has_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+install_with_brew() {
+  if ! has_cmd brew; then
+    return 1
+  fi
+  info "检测到 Homebrew，尝试安装依赖..."
+  if ! has_cmd docker; then
+    brew install --cask docker || warn "Docker Desktop 自动安装失败，请手动安装后重试。"
+  fi
+  has_cmd openssl || brew install openssl || warn "OpenSSL 自动安装失败，请手动安装。"
+  return 0
+}
+
+install_with_apt() {
+  if ! has_cmd apt-get; then
+    return 1
+  fi
+  info "检测到 apt，尝试安装依赖..."
+  sudo apt-get update
+  sudo apt-get install -y docker.io docker-compose-plugin openssl
+  sudo systemctl enable --now docker || true
+  return 0
+}
+
+install_with_dnf_or_yum() {
+  if has_cmd dnf; then
+    info "检测到 dnf，尝试安装依赖..."
+    sudo dnf install -y docker docker-compose-plugin openssl
+    sudo systemctl enable --now docker || true
+    return 0
+  fi
+  if has_cmd yum; then
+    info "检测到 yum，尝试安装依赖..."
+    sudo yum install -y docker openssl
+    sudo systemctl enable --now docker || true
+    return 0
+  fi
+  return 1
+}
+
+ensure_system_deps() {
+  info "检查系统依赖..."
+  if has_cmd docker && docker compose version >/dev/null 2>&1 && has_cmd openssl; then
+    info "系统依赖已满足。"
+    return 0
+  fi
+
+  install_with_brew || install_with_apt || install_with_dnf_or_yum || warn "未识别的包管理器，请手动安装 Docker / Docker Compose / OpenSSL。"
+
+  if ! has_cmd docker; then
+    err "未检测到 docker，请先安装 Docker 后重试。"
+    exit 1
+  fi
+  if ! docker compose version >/dev/null 2>&1; then
+    err "未检测到 docker compose，请先安装后重试。"
+    exit 1
+  fi
+  if ! has_cmd openssl; then
+    err "未检测到 openssl，请先安装后重试。"
+    exit 1
+  fi
+}
+
+ensure_docker_running() {
+  info "检查 Docker 服务状态..."
+  if docker info >/dev/null 2>&1; then
+    info "Docker 运行正常。"
+    return 0
+  fi
+  warn "Docker 当前不可用。"
+  warn "macOS 请先启动 Docker Desktop；Linux 请启动 docker 服务。"
+  err "Docker 未就绪，无法继续部署。"
   exit 1
-fi
+}
 
-echo "=== 步骤 2: 后端 (Spring Boot) ==="
-cd "$ROOT/backend"
-./gradlew bootJar -x test --no-daemon
-echo "后端 jar 已构建。"
+build_frontend_dist() {
+  info "构建前端静态资源（Docker Node 容器）..."
+  mkdir -p "$ROOT/frontend/dist"
+  docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    -v "$ROOT/frontend:/app" \
+    -w /app \
+    node:20-alpine \
+    sh -lc "npm ci --cache /tmp/npm-cache && npm run build"
+}
 
-echo "=== 步骤 3: Worker (Python) ==="
-cd "$ROOT/worker"
-if [ ! -d .venv ]; then
-  python3 -m venv .venv
-fi
-source .venv/bin/activate
-pip install -q -r requirements.txt
-echo "Worker 依赖已安装。"
+ensure_self_signed_cert() {
+  mkdir -p "$CERT_DIR"
+  if [[ -f "$CERT_FILE" && -f "$KEY_FILE" ]]; then
+    info "检测到现有证书，跳过自签名生成。"
+    return 0
+  fi
+  info "生成默认自签名证书（100 年）..."
+  openssl req -x509 -newkey rsa:4096 -sha256 -nodes \
+    -days 36500 \
+    -keyout "$KEY_FILE" \
+    -out "$CERT_FILE" \
+    -subj "/C=CN/ST=Default/L=Default/O=LOOKING GLASS/OU=DevOps/CN=localhost" \
+    -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+}
 
-echo "=== 步骤 4: 前端 ==="
-cd "$ROOT/frontend"
-npm ci
-echo "前端依赖已安装。"
+start_stack() {
+  info "启动容器服务..."
+  docker compose up -d --build
+}
 
-echo ""
-echo "=== 启动服务 ==="
-echo "请在 3 个终端中分别执行以下命令。"
-echo ""
-echo "终端 1 - 后端:"
-echo "  cd $ROOT/backend && java -jar build/libs/looking-glass-backend-0.0.1-SNAPSHOT.jar"
-echo ""
-echo "终端 2 - Worker:"
-echo "  cd $ROOT/worker && source .venv/bin/activate && uvicorn main:app --host 0.0.0.0 --port 8000"
-echo ""
-echo "终端 3 - 前端:"
-echo "  cd $ROOT/frontend && npm run dev"
-echo ""
-echo "全部启动后访问: 公网/后台 http://localhost:3000  默认账号 admin / admin123"
-echo ""
+print_result() {
+  echo
+  info "部署完成。"
+  echo "访问地址："
+  echo "  - HTTPS: https://localhost"
+  echo "  - HTTP:  http://localhost  (自动跳转到 HTTPS)"
+  echo "默认账号：admin / admin123"
+  echo
+  echo "常用命令："
+  echo "  - 查看状态: docker compose ps"
+  echo "  - 查看日志: docker compose logs -f"
+  echo "  - 停止服务: docker compose down"
+}
 
-read -p "是否由本脚本在后台启动以上 3 个服务？(y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  mkdir -p "$ROOT/logs"
-  cd "$ROOT/backend" && java -jar build/libs/looking-glass-backend-0.0.1-SNAPSHOT.jar > "$ROOT/logs/backend.log" 2>&1 &
-  echo $! > "$ROOT/logs/backend.pid"
-  sleep 3
-  cd "$ROOT/worker" && source .venv/bin/activate && uvicorn main:app --host 0.0.0.0 --port 8000 > "$ROOT/logs/worker.log" 2>&1 &
-  echo $! > "$ROOT/logs/worker.pid"
-  sleep 2
-  cd "$ROOT/frontend" && npm run dev > "$ROOT/logs/frontend.log" 2>&1 &
-  echo $! > "$ROOT/logs/frontend.pid"
-  echo "服务已在后台启动，日志见 $ROOT/logs/。访问 http://localhost:3000"
-else
-  echo "请按上述说明在 3 个终端中手动启动服务。"
-fi
+main() {
+  ensure_system_deps
+  ensure_docker_running
+  ensure_self_signed_cert
+  build_frontend_dist
+  start_stack
+  print_result
+}
+
+main "$@"

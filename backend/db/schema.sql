@@ -13,6 +13,7 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL,
   email VARCHAR(128),
   mobile VARCHAR(32),
+  user_type VARCHAR(16) NOT NULL DEFAULT 'LOCAL',
   role_id BIGINT NOT NULL,
   otp_secret VARCHAR(64),
   status TINYINT NOT NULL DEFAULT 1,

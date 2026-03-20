@@ -1,6 +1,7 @@
 package com.isp.lg.controller;
 
 import com.isp.lg.domain.Pop;
+import com.isp.lg.repository.DeviceRepository;
 import com.isp.lg.repository.PopRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -17,24 +18,26 @@ import java.util.Map;
 public class AdminPopController {
 
     private final PopRepository popRepository;
+    private final DeviceRepository deviceRepository;
 
-    public AdminPopController(PopRepository popRepository) {
+    public AdminPopController(PopRepository popRepository, DeviceRepository deviceRepository) {
         this.popRepository = popRepository;
+        this.deviceRepository = deviceRepository;
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'NETWORK_ADMIN', 'READONLY_ADMIN', 'AUDITOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'READONLY')")
     public ResponseEntity<List<Pop>> list() {
         return ResponseEntity.ok(popRepository.findAll());
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'NETWORK_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ResponseEntity<Pop> create(@Valid @RequestBody PopBody body) {
         Pop p = new Pop();
         p.setPopCode(body.getPopCode());
         p.setPopName(body.getPopName());
-        p.setCountry(body.getCountry());
+        p.setCountry(body.getCountry() != null && !body.getCountry().isBlank() ? body.getCountry() : "中国");
         p.setCity(body.getCity());
         p.setIsPublic(body.getIsPublic() != null ? body.getIsPublic() : 1);
         p.setStatus(body.getStatus() != null ? body.getStatus() : 1);
@@ -46,9 +49,12 @@ public class AdminPopController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'NETWORK_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ResponseEntity<Pop> update(@PathVariable Long id, @Valid @RequestBody PopBody body) {
         Pop p = popRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("POP not found"));
+        if (body.getPopCode() != null && !body.getPopCode().isBlank()) {
+            p.setPopCode(body.getPopCode().trim());
+        }
         p.setPopName(body.getPopName());
         p.setCountry(body.getCountry());
         p.setCity(body.getCity());
@@ -61,10 +67,14 @@ public class AdminPopController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'NETWORK_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
-        if (!popRepository.existsById(id)) throw new IllegalArgumentException("POP not found");
-        popRepository.deleteById(id);
+        Pop pop = popRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("POP not found"));
+        long boundDevices = deviceRepository.countByPopId(pop.getId());
+        if (boundDevices > 0) {
+            throw new IllegalArgumentException("该 POP 下仍有关联设备，无法删除，请先迁移或删除设备。");
+        }
+        popRepository.delete(pop);
         return ResponseEntity.ok(Map.of("message", "deleted"));
     }
 

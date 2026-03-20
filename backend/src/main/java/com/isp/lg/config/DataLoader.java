@@ -26,18 +26,19 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (userRepository.count() > 0) return;
-        Role adminRole = roleRepository.findByRoleCode("SUPER_ADMIN")
+        Role adminRole = roleRepository.findByRoleCode("ADMIN")
                 .orElseGet(() -> {
                     Role r = new Role();
-                    r.setRoleName("Super Admin");
-                    r.setRoleCode("SUPER_ADMIN");
-                    r.setDescription("超级管理员");
+                    r.setRoleName("管理员");
+                    r.setRoleCode("ADMIN");
+                    r.setDescription("系统管理员");
                     return roleRepository.save(r);
                 });
         User admin = new User();
         admin.setUsername("admin");
         admin.setPasswordHash(passwordEncoder.encode("admin123"));
         admin.setEmail("admin@example.com");
+        admin.setUserType("LOCAL");
         admin.setRole(adminRole);
         admin.setStatus(1);
         admin.setCreatedAt(Instant.now());

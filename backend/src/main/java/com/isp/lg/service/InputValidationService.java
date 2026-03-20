@@ -22,15 +22,22 @@ public class InputValidationService {
             throw new IllegalArgumentException("target length invalid");
         }
         String t = target.trim();
-        switch (queryType.toUpperCase()) {
+        String q = queryType == null ? "" : queryType.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+        switch (q) {
             case "PING":
+            case "IPV4_PING":
+            case "IPV6_PING":
             case "TRACEROUTE":
+            case "IPV4_TRACEROUTE":
+            case "IPV6_TRACEROUTE":
             case "ROUTE_LOOKUP":
                 if (!isValidIpv4(t) && !isValidIpv6(t) && !isValidDomain(t)) {
                     throw new IllegalArgumentException("target must be IPv4, IPv6 or domain");
                 }
                 break;
             case "BGP_PREFIX":
+            case "IPV4_BGP_ROUTE":
+            case "IPV6_BGP_ROUTE":
                 if (!isValidCidr(t) && !isValidIpv4(t) && !isValidIpv6(t)) {
                     throw new IllegalArgumentException("target must be CIDR or IP");
                 }

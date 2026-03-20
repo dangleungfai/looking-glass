@@ -1,6 +1,5 @@
 package com.isp.lg.service;
 
-import com.isp.lg.repository.SystemSettingRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -14,12 +13,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class RateLimitService {
 
-    private final SystemSettingRepository systemSettingRepository;
+    private final SystemSettingsService systemSettingsService;
     private final Map<String, Window> windows = new ConcurrentHashMap<>();
     private static final long WINDOW_MS = 60_000;
 
-    public RateLimitService(SystemSettingRepository systemSettingRepository) {
-        this.systemSettingRepository = systemSettingRepository;
+    public RateLimitService(SystemSettingsService systemSettingsService) {
+        this.systemSettingsService = systemSettingsService;
     }
 
     public boolean allow(String clientIp) {
@@ -39,15 +38,8 @@ public class RateLimitService {
     }
 
     private int getLimitPerMinute() {
-        return systemSettingRepository.findBySettingKey("rate_limit_per_minute")
-                .map(s -> {
-                    try {
-                        return Integer.parseInt(s.getSettingValue() != null ? s.getSettingValue().trim() : "20");
-                    } catch (NumberFormatException e) {
-                        return 20;
-                    }
-                })
-                .orElse(20);
+        Integer value = systemSettingsService.getRateLimit().getPerIpPerMinute();
+        return value != null && value > 0 ? value : 20;
     }
 
     private static class Window {
