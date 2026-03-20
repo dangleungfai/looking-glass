@@ -19,6 +19,12 @@ info() { echo -e "[INFO] $*"; }
 warn() { echo -e "[WARN] $*"; }
 err()  { echo -e "[ERROR] $*"; }
 
+if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  SUDO=""
+else
+  SUDO="sudo"
+fi
+
 has_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
@@ -40,31 +46,71 @@ install_with_apt() {
     return 1
   fi
   info "检测到 apt，尝试安装依赖..."
-  sudo apt-get update
-  sudo apt-get install -y docker.io docker-compose-plugin openssl
-  sudo systemctl enable --now docker || true
+  $SUDO apt-get update
+
+  # 先尝试系统仓库安装，部分系统没有 docker-compose-plugin 需走回退逻辑
+  if $SUDO apt-get install -y docker.io docker-compose-plugin openssl; then
+    $SUDO systemctl enable --now docker || true
+    return 0
+  fi
+
+  warn "系统仓库缺少 docker-compose-plugin，切换到 Docker 官方仓库安装..."
+  $SUDO apt-get install -y ca-certificates curl gnupg lsb-release openssl
+  $SUDO install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  $SUDO chmod a+r /etc/apt/keyrings/docker.gpg
+
+  UBUNTU_CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME:-jammy}")"
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${UBUNTU_CODENAME} stable" \
+    | $SUDO tee /etc/apt/sources.list.d/docker.list >/dev/null
+
+  $SUDO apt-get update
+  $SUDO apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  $SUDO systemctl enable --now docker || true
+
+  # 再兜底：如果依旧没有 compose plugin，安装独立 docker-compose
+  if ! docker compose version >/dev/null 2>&1; then
+    warn "docker compose 插件仍不可用，安装独立 docker-compose..."
+    $SUDO apt-get install -y docker-compose || true
+  fi
   return 0
 }
 
 install_with_dnf_or_yum() {
   if has_cmd dnf; then
     info "检测到 dnf，尝试安装依赖..."
-    sudo dnf install -y docker docker-compose-plugin openssl
-    sudo systemctl enable --now docker || true
+    $SUDO dnf install -y docker docker-compose-plugin openssl || $SUDO dnf install -y docker docker-compose openssl
+    $SUDO systemctl enable --now docker || true
     return 0
   fi
   if has_cmd yum; then
     info "检测到 yum，尝试安装依赖..."
-    sudo yum install -y docker openssl
-    sudo systemctl enable --now docker || true
+    $SUDO yum install -y docker docker-compose openssl || $SUDO yum install -y docker openssl
+    $SUDO systemctl enable --now docker || true
     return 0
   fi
   return 1
 }
 
+compose_ok() {
+  docker compose version >/dev/null 2>&1 || has_cmd docker-compose
+}
+
+dc() {
+  if docker compose version >/dev/null 2>&1; then
+    docker compose "$@"
+  elif has_cmd docker-compose; then
+    docker-compose "$@"
+  else
+    err "未检测到 docker compose / docker-compose。"
+    exit 1
+  fi
+}
+
 ensure_system_deps() {
   info "检查系统依赖..."
-  if has_cmd docker && docker compose version >/dev/null 2>&1 && has_cmd openssl; then
+  if has_cmd docker && compose_ok && has_cmd openssl; then
     info "系统依赖已满足。"
     return 0
   fi
@@ -75,8 +121,8 @@ ensure_system_deps() {
     err "未检测到 docker，请先安装 Docker 后重试。"
     exit 1
   fi
-  if ! docker compose version >/dev/null 2>&1; then
-    err "未检测到 docker compose，请先安装后重试。"
+  if ! compose_ok; then
+    err "未检测到 docker compose / docker-compose，请先安装后重试。"
     exit 1
   fi
   if ! has_cmd openssl; then
@@ -125,7 +171,7 @@ ensure_self_signed_cert() {
 
 start_stack() {
   info "启动容器服务..."
-  docker compose up -d --build
+  dc up -d --build
 }
 
 print_result() {
@@ -137,9 +183,15 @@ print_result() {
   echo "默认账号：admin / admin123"
   echo
   echo "常用命令："
-  echo "  - 查看状态: docker compose ps"
-  echo "  - 查看日志: docker compose logs -f"
-  echo "  - 停止服务: docker compose down"
+  if docker compose version >/dev/null 2>&1; then
+    echo "  - 查看状态: docker compose ps"
+    echo "  - 查看日志: docker compose logs -f"
+    echo "  - 停止服务: docker compose down"
+  else
+    echo "  - 查看状态: docker-compose ps"
+    echo "  - 查看日志: docker-compose logs -f"
+    echo "  - 停止服务: docker-compose down"
+  fi
 }
 
 main() {
