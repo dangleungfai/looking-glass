@@ -8,6 +8,8 @@ frontend/dist/
 
 # Python venv
 worker/.venv/
+**/__pycache__/
+*.py[cod]
 
 # Logs
 logs/
@@ -17,4 +19,14 @@ logs/
 .DS_Store
 .idea/
 .vscode/
+
+# Runtime artifacts / secrets
+backend/runtime/**
+!backend/runtime/
+!backend/runtime/ssl/
+!backend/runtime/ssl/README.txt
+
+nginx/certs/**
+!nginx/certs/
+!nginx/certs/README.md
 
