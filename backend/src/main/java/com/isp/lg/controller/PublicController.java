@@ -58,6 +58,7 @@ public class PublicController {
         payload.put("showPopCode", systemSettingsService.getShowPopCode());
         payload.put("footerText", systemSettingsService.getFooterText());
         payload.put("homeIntroText", systemSettingsService.getHomeIntroText());
+        payload.put("appearance", systemSettingsService.getAppearance());
         payload.put("logoUrl", "/api/public/logo");
         payload.put("hasCustomLogo", systemAssetService.hasCustomLogo());
         payload.put("clientIp", clientIp);

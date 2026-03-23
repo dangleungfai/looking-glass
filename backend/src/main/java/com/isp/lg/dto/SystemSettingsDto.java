@@ -7,6 +7,7 @@ public class SystemSettingsDto {
         private Boolean showPopCode;
         private String footerText;
         private String homeIntroText;
+        private String appearance;
 
         public String getSystemName() { return systemName; }
         public void setSystemName(String systemName) { this.systemName = systemName; }
@@ -16,6 +17,8 @@ public class SystemSettingsDto {
         public void setFooterText(String footerText) { this.footerText = footerText; }
         public String getHomeIntroText() { return homeIntroText; }
         public void setHomeIntroText(String homeIntroText) { this.homeIntroText = homeIntroText; }
+        public String getAppearance() { return appearance; }
+        public void setAppearance(String appearance) { this.appearance = appearance; }
     }
 
     public static class DeviceDefaults {

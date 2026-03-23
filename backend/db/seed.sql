@@ -45,5 +45,5 @@ INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('ping_default_count', '5', 'Ping 默认次数'),
 ('traceroute_max_hops', '30', 'Traceroute 最大跳数'),
 ('system_rate_limit', '{"perIpPerMinute":20}', '公网限流配置'),
-('system_general', '{"systemName":"ISP Looking Glass","showPopCode":true,"footerText":"","homeIntroText":""}', '系统通用配置')
+('system_general', '{"systemName":"ISP Looking Glass","showPopCode":true,"footerText":"","homeIntroText":"","appearance":"default"}', '系统通用配置')
 ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value);

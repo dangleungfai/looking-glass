@@ -43,16 +43,19 @@ export async function getPublicUiConfig() {
     showPopCode?: boolean;
     footerText?: string;
     homeIntroText?: string;
+    appearance?: string;
     logoUrl?: string;
     hasCustomLogo?: boolean;
     clientIp?: string;
     captchaEnabled?: boolean;
   };
+  const appearance = parsed.appearance === 'techBlue' || parsed.appearance === 'dark' ? parsed.appearance : 'default';
   return {
     systemName: parsed.systemName || 'LOOKING GLASS',
     showPopCode: parsed.showPopCode !== false,
     footerText: parsed.footerText || '',
     homeIntroText: parsed.homeIntroText || '',
+    appearance,
     logoUrl: parsed.logoUrl || '/api/public/logo',
     hasCustomLogo: parsed.hasCustomLogo === true,
     clientIp: parsed.clientIp || '',
@@ -258,6 +261,7 @@ export interface SystemSettingsDto {
     showPopCode: boolean;
     footerText: string;
     homeIntroText: string;
+    appearance: 'default' | 'techBlue' | 'dark';
   };
   deviceDefaults: {
     authType: string;

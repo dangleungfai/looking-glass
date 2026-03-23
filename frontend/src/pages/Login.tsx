@@ -32,8 +32,7 @@ export const Login: React.FC = () => {
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
-        background:
-          'radial-gradient(circle at top left, #e0f2fe 0, transparent 55%), radial-gradient(circle at bottom right, #e5e7eb 0, transparent 55%), #f5f5f7',
+        background: 'var(--lg-page-bg)',
         padding: '20vh 16px 32px',
       }}
     >
@@ -46,9 +45,8 @@ export const Login: React.FC = () => {
             style={{
               borderRadius: 28,
               boxShadow: '0 18px 45px rgba(15, 23, 42, 0.16)',
-              border: '1px solid rgba(148, 163, 184, 0.35)',
-              background:
-                'radial-gradient(circle at top, rgba(255,255,255,0.9), rgba(248,250,252,0.95))',
+              border: '1px solid var(--lg-border)',
+              background: 'var(--lg-card-bg)',
             }}
             bodyStyle={{ padding: '28px 28px 24px' }}
           >
@@ -83,14 +81,14 @@ export const Login: React.FC = () => {
                   style={{
                     borderRadius: 999,
                     fontWeight: 500,
-                    background: 'linear-gradient(135deg, #111827, #4b5563)',
+                    background: 'linear-gradient(135deg, var(--lg-primary), var(--lg-accent))',
                     border: 'none',
                   }}
                 >
                   登录
                 </Button>
               </Form.Item>
-              <div style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--lg-text-secondary)', textAlign: 'center', marginTop: 4 }}>
                 若忘记密码，请联系系统管理员重置。
               </div>
             </Form>

@@ -76,6 +76,7 @@ export const Settings: React.FC = () => {
         showPopCode: true,
         footerText: DEFAULT_FOOTER_TEXT,
         homeIntroText: DEFAULT_HOME_INTRO_TEXT,
+        appearance: 'default',
       },
       deviceDefaults: {
         authType: 'SSH',
@@ -118,6 +119,8 @@ export const Settings: React.FC = () => {
         const currentShowPopCode = typeof d.general?.showPopCode === 'boolean' ? d.general.showPopCode : true;
         const currentFooterText = d.general?.footerText?.trim() || DEFAULT_FOOTER_TEXT;
         const currentHomeIntroText = d.general?.homeIntroText?.trim() || DEFAULT_HOME_INTRO_TEXT;
+        const currentAppearance =
+          d.general?.appearance === 'techBlue' || d.general?.appearance === 'dark' ? d.general.appearance : 'default';
         const ldap = {
           ...defaults.ldap,
           ...d.ldap,
@@ -130,6 +133,7 @@ export const Settings: React.FC = () => {
             showPopCode: currentShowPopCode,
             footerText: currentFooterText,
             homeIntroText: currentHomeIntroText,
+            appearance: currentAppearance,
           },
           deviceDefaults: {
             ...d.deviceDefaults,
@@ -184,6 +188,10 @@ export const Settings: React.FC = () => {
         showPopCode: values.general?.showPopCode ?? loadedGeneral.showPopCode ?? true,
         footerText: values.general?.footerText?.trim() || loadedGeneral.footerText || DEFAULT_FOOTER_TEXT,
         homeIntroText: values.general?.homeIntroText?.trim() || loadedGeneral.homeIntroText || DEFAULT_HOME_INTRO_TEXT,
+        appearance:
+          values.general?.appearance === 'techBlue' || values.general?.appearance === 'dark'
+            ? values.general.appearance
+            : (loadedGeneral.appearance || 'default'),
       },
       deviceDefaults: {
         ...loadedDeviceDefaults,
@@ -234,6 +242,7 @@ export const Settings: React.FC = () => {
             showPopCode: normalizedValues.general.showPopCode,
             footerText: normalizedValues.general.footerText,
             homeIntroText: normalizedValues.general.homeIntroText,
+            appearance: normalizedValues.general.appearance,
           },
         };
         setData(normalized);
@@ -242,6 +251,7 @@ export const Settings: React.FC = () => {
         localStorage.setItem('lg_show_pop_code', normalizedValues.general.showPopCode ? 'true' : 'false');
         localStorage.setItem('lg_footer_text', normalizedValues.general.footerText);
         localStorage.setItem('lg_home_intro_text', normalizedValues.general.homeIntroText);
+        localStorage.setItem('lg_appearance', normalizedValues.general.appearance);
         window.dispatchEvent(new CustomEvent('lg-system-name-changed', { detail: normalizedValues.general.systemName }));
         window.dispatchEvent(
           new CustomEvent('lg-show-pop-code-changed', { detail: { showPopCode: normalizedValues.general.showPopCode } }),
@@ -251,6 +261,9 @@ export const Settings: React.FC = () => {
         );
         window.dispatchEvent(
           new CustomEvent('lg-home-intro-text-changed', { detail: { homeIntroText: normalizedValues.general.homeIntroText } }),
+        );
+        window.dispatchEvent(
+          new CustomEvent('lg-appearance-changed', { detail: { appearance: normalizedValues.general.appearance } }),
         );
       })
       .catch((e) => message.error(e.message || '保存失败'))
@@ -473,6 +486,15 @@ export const Settings: React.FC = () => {
                   </Form.Item>
                   <Form.Item name={['general', 'showPopCode']} label="前端显示POP编码" valuePropName="checked">
                     <Switch checkedChildren="显示" unCheckedChildren="隐藏" />
+                  </Form.Item>
+                  <Form.Item name={['general', 'appearance']} label="外观主题">
+                    <Select
+                      options={[
+                        { value: 'default', label: '默认主题' },
+                        { value: 'techBlue', label: '科技蓝（蓝绿白）' },
+                        { value: 'dark', label: '深色外观（沉稳护眼）' },
+                      ]}
+                    />
                   </Form.Item>
                   <Form.Item name={['general', 'footerText']} label="页脚信息">
                     <Input.TextArea

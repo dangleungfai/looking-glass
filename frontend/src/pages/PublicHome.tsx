@@ -114,7 +114,7 @@ export const PublicHome: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#f5f5f7',
+          background: 'var(--lg-page-bg)',
         }}
       >
         <Spin size="large" />
@@ -128,8 +128,8 @@ export const PublicHome: React.FC = () => {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        background: '#f5f5f7',
-        color: '#1d1d1f',
+        background: 'var(--lg-page-bg)',
+        color: 'var(--lg-text)',
         overflowX: 'hidden',
         boxSizing: 'border-box',
       }}
@@ -153,8 +153,8 @@ export const PublicHome: React.FC = () => {
         style={{
           width: '100%',
           backdropFilter: 'blur(16px)',
-          background: 'rgba(255,255,255,0.86)',
-          borderBottom: '1px solid #e5e5e7',
+          background: 'var(--lg-header-bg)',
+          borderBottom: '1px solid var(--lg-border)',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
         }}
       >
@@ -195,9 +195,9 @@ export const PublicHome: React.FC = () => {
             style={{
               borderRadius: 999,
               paddingInline: 16,
-              background: '#0071e3',
+              background: 'var(--lg-primary)',
               border: 'none',
-              boxShadow: '0 4px 12px rgba(0, 113, 227, 0.28)',
+              boxShadow: '0 4px 12px rgba(22, 119, 255, 0.28)',
             }}
           >
             登录
@@ -231,7 +231,7 @@ export const PublicHome: React.FC = () => {
               overflow: 'hidden',
               borderRadius: 0,
               background:
-                'linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%)',
+                'var(--lg-card-bg)',
               border: 'none',
               boxShadow: 'none',
               padding: '28px clamp(16px, 2.4vw, 28px)',
@@ -329,7 +329,7 @@ export const PublicHome: React.FC = () => {
               >
                     {systemName || 'LOOKING GLASS'}
               </div>
-              <Text style={{ color: '#424245', fontSize: 18, lineHeight: 1.65, maxWidth: 900 }}>
+              <Text style={{ color: 'var(--lg-text-secondary)', fontSize: 18, lineHeight: 1.65, maxWidth: 900 }}>
                 {systemName} 提供从骨干网视角出发的实时诊断能力。你可以快速对路由路径、连通性与时延进行观测，
                 获得接近运营商侧的网络可见性。
               </Text>
@@ -355,13 +355,13 @@ export const PublicHome: React.FC = () => {
                   key={item.label}
                   style={{
                     borderRadius: 14,
-                    border: '1px solid #e5e7eb',
-                    background: '#ffffff',
+                    border: '1px solid var(--lg-border)',
+                    background: 'var(--lg-card-bg)',
                     padding: '14px 14px 13px',
                   }}
                 >
-                  <div style={{ color: '#1d1d1f', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ color: '#6e6e73', fontSize: 12 }}>{item.desc}</div>
+                  <div style={{ color: 'var(--lg-text)', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ color: 'var(--lg-text-secondary)', fontSize: 12 }}>{item.desc}</div>
                 </div>
               ))}
             </div>
@@ -379,8 +379,8 @@ export const PublicHome: React.FC = () => {
               }}
             >
               <div style={{ marginBottom: 12 }}>
-                <Text style={{ color: '#0f172a', fontSize: 19, fontWeight: 600 }}>立即发起网络诊断</Text>
-                <Paragraph style={{ marginBottom: 0, marginTop: 6, fontSize: 13, color: '#6e6e73' }}>
+                <Text style={{ color: 'var(--lg-text)', fontSize: 19, fontWeight: 600 }}>立即发起网络诊断</Text>
+                <Paragraph style={{ marginBottom: 0, marginTop: 6, fontSize: 13, color: 'var(--lg-text-secondary)' }}>
                   选择 POP 与查询类型后，输入目标 IP / 域名 / 前缀。
                 </Paragraph>
               </div>
@@ -462,7 +462,7 @@ export const PublicHome: React.FC = () => {
                         height: 44,
                         borderRadius: 999,
                         fontWeight: 600,
-                        background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+                        background: 'linear-gradient(135deg, var(--lg-primary), var(--lg-accent))',
                         border: 'none',
                       }}
                     >
@@ -518,7 +518,7 @@ export const PublicHome: React.FC = () => {
           <div
             style={{
               background:
-                'radial-gradient(120% 130% at 0% 0%, rgba(0,113,227,0.09), rgba(248,248,250,0.98) 45%, rgba(255,255,255,1) 100%)',
+                'var(--lg-card-bg)',
               borderRadius: 0,
               border: 'none',
               boxShadow: 'none',
@@ -527,7 +527,7 @@ export const PublicHome: React.FC = () => {
           >
             <Paragraph
               style={{
-                color: '#334155',
+                color: 'var(--lg-text-secondary)',
                 fontSize: 14,
                 lineHeight: 1.85,
                 whiteSpace: 'pre-wrap',
@@ -543,10 +543,10 @@ export const PublicHome: React.FC = () => {
         <footer
           style={{
             width: '100%',
-            background: 'linear-gradient(180deg, #f5f5f7, #ececf0)',
-            borderTop: '1px solid #e0e0e6',
+            background: 'var(--lg-footer-bg)',
+            borderTop: '1px solid var(--lg-border)',
             marginTop: 8,
-            color: '#6e6e73',
+            color: 'var(--lg-text-secondary)',
             fontSize: 12,
           }}
         >

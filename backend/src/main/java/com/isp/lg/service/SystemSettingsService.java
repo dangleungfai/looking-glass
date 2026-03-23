@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 public class SystemSettingsService {
 
     private static final String DEFAULT_FOOTER_TEXT = "© 2026 ISP Looking Glass. All rights reserved.";
+    private static final String DEFAULT_APPEARANCE = "default";
     public static final String KEY_GENERAL = "system_general";
     public static final String KEY_DEVICE_DEFAULTS = "system_device_defaults";
     public static final String KEY_RATE_LIMIT = "system_rate_limit";
@@ -105,6 +106,10 @@ public class SystemSettingsService {
         return text;
     }
 
+    public String getAppearance() {
+        return normalizeGeneral(readJson(KEY_GENERAL, SystemSettingsDto.General.class, this::defaultGeneral)).getAppearance();
+    }
+
     private <T> T readJson(String key, Class<T> type, Supplier<T> defaultSupplier) {
         return repo.findBySettingKey(key)
                 .map(s -> {
@@ -155,6 +160,7 @@ public class SystemSettingsService {
         g.setShowPopCode(true);
         g.setFooterText(DEFAULT_FOOTER_TEXT);
         g.setHomeIntroText(defaultHomeIntroText());
+        g.setAppearance(DEFAULT_APPEARANCE);
         return g;
     }
 
@@ -176,6 +182,16 @@ public class SystemSettingsService {
             g.setHomeIntroText(defaultHomeIntroText());
         } else {
             g.setHomeIntroText(stripDeprecatedIntroHeading(introText.trim()));
+        }
+        String appearance = g.getAppearance();
+        if (appearance == null || appearance.isBlank()) {
+            g.setAppearance(DEFAULT_APPEARANCE);
+        } else {
+            String normalized = appearance.trim();
+            if (!"default".equals(normalized) && !"techBlue".equals(normalized) && !"dark".equals(normalized)) {
+                normalized = DEFAULT_APPEARANCE;
+            }
+            g.setAppearance(normalized);
         }
         return g;
     }

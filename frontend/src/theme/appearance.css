@@ -1,0 +1,46 @@
+:root,
+body[data-lg-theme='default'] {
+  --lg-page-bg: #f5f5f7;
+  --lg-card-bg: #ffffff;
+  --lg-border: #dbe5f0;
+  --lg-text: #111827;
+  --lg-text-secondary: #6b7280;
+  --lg-primary: #2563eb;
+  --lg-accent: #14b8a6;
+  --lg-header-bg: rgba(248, 250, 252, 0.86);
+  --lg-footer-bg: #eef2ff;
+}
+
+body[data-lg-theme='techBlue'] {
+  --lg-page-bg: #f6fbff;
+  --lg-card-bg: #ffffff;
+  --lg-border: #dceaf5;
+  --lg-text: #1f2937;
+  --lg-text-secondary: #6b7280;
+  --lg-primary: #1677ff;
+  --lg-accent: #14b8a6;
+  --lg-header-bg: linear-gradient(90deg, rgba(22, 119, 255, 0.92), rgba(20, 184, 166, 0.88));
+  --lg-footer-bg: #eaf5ff;
+}
+
+body[data-lg-theme='dark'] {
+  --lg-page-bg: #0f172a;
+  --lg-card-bg: #1e293b;
+  --lg-border: #334155;
+  --lg-text: #e5e7eb;
+  --lg-text-secondary: #94a3b8;
+  --lg-primary: #3b82f6;
+  --lg-accent: #22c55e;
+  --lg-header-bg: rgba(17, 24, 39, 0.92);
+  --lg-footer-bg: #111827;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  background: var(--lg-page-bg);
+  color: var(--lg-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+

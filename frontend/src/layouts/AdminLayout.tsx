@@ -74,8 +74,7 @@ export const AdminLayout: React.FC = () => {
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          background:
-            'radial-gradient(circle at top left, #e0f2fe 0, transparent 55%), radial-gradient(circle at bottom right, #e5e7eb 0, transparent 55%), #f5f5f7',
+          background: 'var(--lg-page-bg)',
         }}
       >
         <Header
@@ -86,9 +85,9 @@ export const AdminLayout: React.FC = () => {
             lineHeight: 1.2,
             padding: 0,
             paddingInline: 32,
-            background: 'rgba(248,250,252,0.86)',
+            background: 'var(--lg-header-bg)',
             backdropFilter: 'blur(10px)',
-            borderBottom: '1px solid rgba(148,163,184,0.35)',
+            borderBottom: '1px solid var(--lg-border)',
           }}
         >
         {/* 与下方主内容区同宽（maxWidth 1200 + 居中），左右与 Content 的 32px 内边距一致 */}
@@ -132,7 +131,7 @@ export const AdminLayout: React.FC = () => {
                 style={{
                   fontSize: 15,
                   fontWeight: 600,
-                  color: '#111827',
+                  color: 'var(--lg-text)',
                   lineHeight: '20px',
                 }}
               >
@@ -165,7 +164,7 @@ export const AdminLayout: React.FC = () => {
             <span
               style={{
                 fontSize: 13,
-                color: '#4b5563',
+                color: 'var(--lg-text-secondary)',
                 maxWidth: 200,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -175,7 +174,7 @@ export const AdminLayout: React.FC = () => {
             >
               {username || '-'}
             </span>
-            <Button type="text" onClick={logout} style={{ color: '#111827', fontSize: 12, padding: '0 8px' }}>
+            <Button type="text" onClick={logout} style={{ color: 'var(--lg-text)', fontSize: 12, padding: '0 8px' }}>
               退出
             </Button>
           </div>
@@ -186,10 +185,10 @@ export const AdminLayout: React.FC = () => {
           style={{
             maxWidth: 1200,
             margin: '0 auto',
-            background: 'rgba(255,255,255,0.94)',
+            background: 'var(--lg-card-bg)',
             borderRadius: 32,
-            boxShadow: '0 24px 80px rgba(15,23,42,0.18)',
-            border: '1px solid rgba(148,163,184,0.45)',
+            boxShadow: '0 16px 44px rgba(15,23,42,0.16)',
+            border: '1px solid var(--lg-border)',
             padding: 24,
           }}
         >
@@ -207,9 +206,9 @@ export const AdminLayout: React.FC = () => {
         <div
           style={{
             width: '100%',
-            background: '#eef2ff',
-            borderTop: '1px solid #dbeafe',
-            color: '#64748b',
+            background: 'var(--lg-footer-bg)',
+            borderTop: '1px solid var(--lg-border)',
+            color: 'var(--lg-text-secondary)',
             fontSize: 12,
           }}
         >
