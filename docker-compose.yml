@@ -40,6 +40,11 @@ services:
       SPRING_DATASOURCE_USERNAME: lg_user
       SPRING_DATASOURCE_PASSWORD: lg_password
       LOOKING_GLASS_WORKER_URL: http://worker:8000
+      LOOKING_GLASS_NGINX_CERT_DIR: /nginx/certs
+      LOOKING_GLASS_NGINX_RELOAD_CMD: docker kill -s HUP $(docker ps -q --filter label=com.docker.compose.service=frontend | head -n1)
+    volumes:
+      - ./nginx/certs:/nginx/certs
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       mysql:
         condition: service_healthy

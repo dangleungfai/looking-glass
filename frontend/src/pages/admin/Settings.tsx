@@ -376,7 +376,7 @@ export const Settings: React.FC = () => {
   const confirmResetSelfSignedNginxCert = () => {
     Modal.confirm({
       title: '确认重置为自签名 SSL 证书？',
-      content: '将覆盖当前 Nginx 证书文件。重置后请重载 Nginx 才会生效。',
+      content: '将覆盖当前 Nginx 证书文件。系统会尝试自动重载 Nginx，失败时请手动重载。',
       okText: '确认重置',
       cancelText: '取消',
       okButtonProps: { danger: true },
@@ -509,7 +509,7 @@ export const Settings: React.FC = () => {
                         </Button>
                       </Space>
                       <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-                        Nginx 证书目录：`nginx/certs`。替换/重置后请执行 `docker compose restart frontend` 生效。
+                        Nginx 证书目录：`nginx/certs`。替换/重置后系统会自动重载 Nginx，若提示失败再执行 `docker compose restart frontend`。
                       </Text>
                       <input
                         ref={logoInputRef}

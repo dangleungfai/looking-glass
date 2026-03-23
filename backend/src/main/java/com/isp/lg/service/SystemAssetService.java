@@ -4,6 +4,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,20 +14,28 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SystemAssetService {
+    private static final Logger log = LoggerFactory.getLogger(SystemAssetService.class);
 
     private static final Path ASSET_DIR = Path.of("runtime", "assets");
     private static final Path LOGO_PATH = ASSET_DIR.resolve("logo");
     private static final long MAX_LOGO_SIZE = 2 * 1024 * 1024;
     private static final long MAX_CERT_SIZE = 10 * 1024 * 1024;
     private static final int SELF_SIGNED_DAYS = 36500;
+    private static final int RELOAD_TIMEOUT_SECONDS = 20;
 
     private final Path nginxCertDir;
+    private final String nginxReloadCmd;
 
-    public SystemAssetService(@Value("${looking-glass.nginx.cert-dir:../nginx/certs}") String certDir) {
+    public SystemAssetService(
+            @Value("${looking-glass.nginx.cert-dir:../nginx/certs}") String certDir,
+            @Value("${looking-glass.nginx.reload-cmd:}") String reloadCmd
+    ) {
         this.nginxCertDir = Path.of(certDir);
+        this.nginxReloadCmd = reloadCmd == null ? "" : reloadCmd.trim();
     }
 
     public record AssetData(byte[] bytes, String contentType) {}
@@ -67,7 +77,7 @@ public class SystemAssetService {
         return Files.exists(LOGO_PATH);
     }
 
-    public void replaceNginxSslCert(MultipartFile fullchain, MultipartFile privkey) throws IOException {
+    public String replaceNginxSslCert(MultipartFile fullchain, MultipartFile privkey) throws IOException {
         if (fullchain == null || fullchain.isEmpty()) {
             throw new IllegalArgumentException("请上传 fullchain.pem");
         }
@@ -97,9 +107,10 @@ public class SystemAssetService {
             Files.deleteIfExists(certTmp);
             Files.deleteIfExists(keyTmp);
         }
+        return tryReloadNginx("证书文件已替换");
     }
 
-    public void resetSelfSignedNginxCert() throws Exception {
+    public String resetSelfSignedNginxCert() throws Exception {
         Files.createDirectories(nginxCertDir);
         Path cert = nginxCertDir.resolve("fullchain.pem");
         Path key = nginxCertDir.resolve("privkey.pem");
@@ -124,6 +135,32 @@ public class SystemAssetService {
             if (fallbackCode != 0) {
                 throw new IllegalStateException("生成自签名证书失败，请确认已安装 openssl");
             }
+        }
+        return tryReloadNginx("已重置为自签名证书");
+    }
+
+    private String tryReloadNginx(String prefixMessage) {
+        if (nginxReloadCmd.isBlank()) {
+            return prefixMessage + "，请重载 Nginx 生效";
+        }
+        try {
+            Process p = new ProcessBuilder("sh", "-lc", nginxReloadCmd).redirectErrorStream(true).start();
+            boolean finished = p.waitFor(RELOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            String output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            if (!finished) {
+                p.destroyForcibly();
+                log.warn("Nginx reload command timeout after {}s, cmd={}", RELOAD_TIMEOUT_SECONDS, nginxReloadCmd);
+                return prefixMessage + "，自动重载超时，请手动重载 Nginx";
+            }
+            if (p.exitValue() == 0) {
+                return prefixMessage + "，已自动重载 Nginx";
+            }
+            log.warn("Nginx reload command failed, exitCode={}, cmd={}, output={}",
+                    p.exitValue(), nginxReloadCmd, output);
+            return prefixMessage + "，自动重载失败，请手动重载 Nginx";
+        } catch (Exception e) {
+            log.warn("Nginx reload command execution error, cmd={}", nginxReloadCmd, e);
+            return prefixMessage + "，自动重载异常，请手动重载 Nginx";
         }
     }
 

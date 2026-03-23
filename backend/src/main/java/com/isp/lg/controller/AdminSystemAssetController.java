@@ -44,19 +44,19 @@ public class AdminSystemAssetController {
     @PostMapping("/nginx-ssl/upload")
     public ResponseEntity<Map<String, Object>> uploadNginxSsl(@RequestParam("fullchain") MultipartFile fullchain,
                                                               @RequestParam("privkey") MultipartFile privkey) throws Exception {
-        systemAssetService.replaceNginxSslCert(fullchain, privkey);
+        String msg = systemAssetService.replaceNginxSslCert(fullchain, privkey);
         return ResponseEntity.ok(Map.of(
                 "ok", true,
-                "message", "Nginx 证书已替换，请重载 Nginx 生效"
+                "message", msg
         ));
     }
 
     @PostMapping("/nginx-ssl/reset-self-signed")
     public ResponseEntity<Map<String, Object>> resetSelfSigned() throws Exception {
-        systemAssetService.resetSelfSignedNginxCert();
+        String msg = systemAssetService.resetSelfSignedNginxCert();
         return ResponseEntity.ok(Map.of(
                 "ok", true,
-                "message", "已重置为自签名证书（最长年限），请重载 Nginx 生效"
+                "message", msg
         ));
     }
 
