@@ -173,11 +173,11 @@ export const QueryLogs: React.FC = () => {
               }}
             >
               {cmd ? (
-                <div style={{ ...cellEllipsis, fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                <div style={{ ...cellEllipsis, fontSize: 12, color: 'var(--lg-text-secondary)', marginBottom: 4 }}>
                   命令：{cmd}
                 </div>
               ) : null}
-              <div style={{ ...cellEllipsis, color: '#cf1322' }}>{reason}</div>
+              <div style={{ ...cellEllipsis, color: 'var(--lg-danger)' }}>{reason}</div>
             </div>
           );
         }
@@ -194,11 +194,11 @@ export const QueryLogs: React.FC = () => {
               }}
             >
               {cmd ? (
-                <div style={{ ...cellEllipsis, fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                <div style={{ ...cellEllipsis, fontSize: 12, color: 'var(--lg-text-secondary)', marginBottom: 4 }}>
                   命令：{cmd}
                 </div>
               ) : null}
-              <div style={{ ...cellEllipsis, color: '#111827' }}>{out}</div>
+              <div style={{ ...cellEllipsis, color: 'var(--lg-text)' }}>{out}</div>
             </div>
           );
         }
@@ -216,11 +216,11 @@ export const QueryLogs: React.FC = () => {
               }}
             >
               {cmd ? (
-                <div style={{ ...cellEllipsis, fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                <div style={{ ...cellEllipsis, fontSize: 12, color: 'var(--lg-text-secondary)', marginBottom: 4 }}>
                   命令：{cmd}
                 </div>
               ) : null}
-              <div style={{ ...cellEllipsis, color: '#8c8c8c' }}>执行中</div>
+              <div style={{ ...cellEllipsis, color: 'var(--lg-warning)' }}>执行中</div>
             </div>
           );
         }

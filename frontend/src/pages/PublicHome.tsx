@@ -7,13 +7,11 @@ import { useShowPopCode } from '../hooks/useShowPopCode';
 import { useFooterText } from '../hooks/useFooterText';
 import { useHomeIntroText } from '../hooks/useHomeIntroText';
 import { useLogoUrl } from '../hooks/useLogoUrl';
-import { useNavigate } from 'react-router-dom';
 import { DEFAULT_HOME_INTRO_TEXT } from '../constants/systemContent';
 
 const { Text, Paragraph } = Typography;
 
 export const PublicHome: React.FC = () => {
-  const navigate = useNavigate();
   const systemName = useSystemName();
   const showPopCode = useShowPopCode();
   const footerText = useFooterText();
@@ -152,7 +150,8 @@ export const PublicHome: React.FC = () => {
       <header
         style={{
           width: '100%',
-          backdropFilter: 'blur(16px)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           background: 'var(--lg-header-bg)',
           borderBottom: '1px solid var(--lg-border)',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -166,7 +165,7 @@ export const PublicHome: React.FC = () => {
             boxSizing: 'border-box',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: hasCustomLogo ? 8 : 0 }}>
@@ -185,23 +184,9 @@ export const PublicHome: React.FC = () => {
                 onError={() => setHasCustomLogo(false)}
               />
             ) : (
-              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: 0.4 }}>{systemName}</span>
+              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: 0.4, color: 'var(--lg-header-text)' }}>{systemName}</span>
             )}
           </div>
-          <Button
-            size="small"
-            type="primary"
-            onClick={() => navigate('/login')}
-            style={{
-              borderRadius: 999,
-              paddingInline: 16,
-              background: 'var(--lg-primary)',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(22, 119, 255, 0.28)',
-            }}
-          >
-            登录
-          </Button>
         </div>
       </header>
 
@@ -228,10 +213,10 @@ export const PublicHome: React.FC = () => {
           <div
             style={{
               position: 'relative',
-              overflow: 'hidden',
+              /* 不要用 hidden：左/下角装饰圆用了负定位，裁切后会在白底 HERO 上形成弧形「缺口」 */
+              overflow: 'visible',
               borderRadius: 0,
-              background:
-                'var(--lg-card-bg)',
+              background: 'var(--lg-hero-bg)',
               border: 'none',
               boxShadow: 'none',
               padding: '28px clamp(16px, 2.4vw, 28px)',
@@ -322,14 +307,14 @@ export const PublicHome: React.FC = () => {
                   fontWeight: 700,
                   letterSpacing: 0.4,
                   marginBottom: 22,
-                  background: 'linear-gradient(120deg, #1d1d1f, #3a3a3c 55%, #6e6e73)',
+                  background: 'var(--lg-hero-title-bg)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
               >
                     {systemName || 'LOOKING GLASS'}
               </div>
-              <Text style={{ color: 'var(--lg-text-secondary)', fontSize: 18, lineHeight: 1.65, maxWidth: 900 }}>
+              <Text style={{ color: 'var(--lg-hero-description)', fontSize: 18, lineHeight: 1.65, maxWidth: 900 }}>
                 {systemName} 提供从骨干网视角出发的实时诊断能力。你可以快速对路由路径、连通性与时延进行观测，
                 获得接近运营商侧的网络可见性。
               </Text>
@@ -356,7 +341,7 @@ export const PublicHome: React.FC = () => {
                   style={{
                     borderRadius: 14,
                     border: '1px solid var(--lg-border)',
-                    background: 'var(--lg-card-bg)',
+                    background: 'var(--lg-hero-chip-bg)',
                     padding: '14px 14px 13px',
                   }}
                 >
@@ -372,7 +357,7 @@ export const PublicHome: React.FC = () => {
                 marginTop: 22,
                 borderRadius: 0,
                 backdropFilter: 'blur(8px)',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.96), rgba(250,250,252,0.94))',
+                background: 'var(--lg-panel-bg)',
                 border: 'none',
                 boxShadow: 'none',
                 padding: 22,
@@ -389,7 +374,7 @@ export const PublicHome: React.FC = () => {
                   style={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    gap: 12,
+                    gap: 10,
                     alignItems: 'flex-end',
                     marginBottom: 8,
                   }}
@@ -398,7 +383,7 @@ export const PublicHome: React.FC = () => {
                     name="popCode"
                     label="POP 节点"
                     rules={[{ required: true, message: '请选择 POP 节点' }]}
-                    style={{ flex: '1 1 240px', marginBottom: 0, minWidth: 0 }}
+                    style={{ flex: '1 1 160px', marginBottom: 0, minWidth: 0 }}
                   >
                     <Select
                       size="large"
@@ -413,7 +398,7 @@ export const PublicHome: React.FC = () => {
                     name="queryType"
                     label="查询类型"
                     rules={[{ required: true, message: '请选择查询类型' }]}
-                    style={{ flex: '1 1 240px', marginBottom: 0, minWidth: 0 }}
+                    style={{ flex: '1 1 160px', marginBottom: 0, minWidth: 0 }}
                   >
                     <Select
                       size="large"
@@ -425,7 +410,7 @@ export const PublicHome: React.FC = () => {
                     name="target"
                     label="目标 (IP / 域名 / 前缀)"
                     rules={[{ required: true, message: '请输入查询目标' }]}
-                    style={{ flex: '1 1 240px', marginBottom: 0, minWidth: 0 }}
+                    style={{ flex: '1 1 160px', marginBottom: 0, minWidth: 0 }}
                   >
                     <Input size="large" placeholder={targetPlaceholder} />
                   </Form.Item>
@@ -434,7 +419,7 @@ export const PublicHome: React.FC = () => {
                       name="captchaAnswer"
                       label={captchaQuestion ? `验证码：${captchaQuestion}` : '验证码'}
                       rules={[{ required: true, message: '请输入验证码' }]}
-                      style={{ flex: '1 1 220px', marginBottom: 0, minWidth: 0 }}
+                      style={{ flex: '1 1 160px', marginBottom: 0, minWidth: 0 }}
                     >
                       <Input
                         size="large"
@@ -452,18 +437,17 @@ export const PublicHome: React.FC = () => {
                       />
                     </Form.Item>
                   )}
-                  <Form.Item style={{ flex: '0 0 120px', marginBottom: 0 }}>
+                  <Form.Item style={{ flex: '0 0 96px', marginBottom: 0 }}>
                     <Button
                       type="primary"
                       htmlType="submit"
                       loading={loading}
                       block
+                      className="lg-public-query-btn"
                       style={{
                         height: 44,
                         borderRadius: 999,
                         fontWeight: 600,
-                        background: 'linear-gradient(135deg, var(--lg-primary), var(--lg-accent))',
-                        border: 'none',
                       }}
                     >
                       查询
@@ -484,10 +468,10 @@ export const PublicHome: React.FC = () => {
             <div
               style={{
                 marginTop: 4,
-                background: 'linear-gradient(145deg, #ffffff, #fafafc)',
+                background: 'var(--lg-result-bg)',
                 borderRadius: 0,
                 border: 'none',
-                color: '#1f2937',
+                color: 'var(--lg-text)',
                 boxShadow: 'none',
                 padding: 18,
               }}
@@ -495,15 +479,15 @@ export const PublicHome: React.FC = () => {
               {((result as { result?: { rawText?: string } }).result?.rawText) && (
                 <pre
                   style={{
-                    background: 'rgba(248, 250, 252, 0.95)',
+                    background: 'var(--lg-code-bg)',
                     padding: 10,
                     borderRadius: 12,
                     overflow: 'auto',
                     maxHeight: 420,
                     fontSize: 11,
                     lineHeight: 1.4,
-                    color: '#0f172a',
-                    border: '1px solid rgba(226, 232, 240, 1)',
+                    color: 'var(--lg-code-text)',
+                    border: '1px solid var(--lg-border)',
                   }}
                 >
                   {((result as { result?: { rawText?: string } }).result?.rawText)}

@@ -68,6 +68,22 @@ export const AdminLayout: React.FC = () => {
         .admin-top-menu.ant-menu-horizontal > .ant-menu-submenu::after {
           border-bottom: none !important;
         }
+        .admin-top-menu.ant-menu-horizontal {
+          color: var(--lg-header-text) !important;
+        }
+        .admin-top-menu.ant-menu-horizontal > .ant-menu-item,
+        .admin-top-menu.ant-menu-horizontal > .ant-menu-submenu {
+          color: var(--lg-header-text) !important;
+        }
+        .admin-top-menu.ant-menu-horizontal > .ant-menu-item a,
+        .admin-top-menu.ant-menu-horizontal > .ant-menu-submenu .ant-menu-title-content {
+          color: var(--lg-header-text) !important;
+        }
+        .admin-top-menu.ant-menu-horizontal > .ant-menu-item-selected,
+        .admin-top-menu.ant-menu-horizontal > .ant-menu-item-active {
+          background: color-mix(in srgb, var(--lg-header-text), transparent 88%) !important;
+          border-radius: 8px;
+        }
       `}</style>
       <Layout
         style={{
@@ -131,7 +147,7 @@ export const AdminLayout: React.FC = () => {
                 style={{
                   fontSize: 15,
                   fontWeight: 600,
-                  color: 'var(--lg-text)',
+                  color: 'var(--lg-header-text)',
                   lineHeight: '20px',
                 }}
               >
@@ -164,7 +180,7 @@ export const AdminLayout: React.FC = () => {
             <span
               style={{
                 fontSize: 13,
-                color: 'var(--lg-text-secondary)',
+                color: 'var(--lg-header-text)',
                 maxWidth: 200,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -174,7 +190,7 @@ export const AdminLayout: React.FC = () => {
             >
               {username || '-'}
             </span>
-            <Button type="text" onClick={logout} style={{ color: 'var(--lg-text)', fontSize: 12, padding: '0 8px' }}>
+            <Button type="text" onClick={logout} style={{ color: 'var(--lg-header-text)', fontSize: 12, padding: '0 8px' }}>
               退出
             </Button>
           </div>

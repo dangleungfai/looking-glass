@@ -144,12 +144,11 @@ export const Settings: React.FC = () => {
           ldap,
         };
         setData(normalized);
-        form.setFieldsValue(normalized);
+        /* 不在此处 setFieldsValue：加载完成前 Form 未挂载，antd 会与 initialValues 合并时被 defaults 覆盖 appearance */
       })
       .catch((e) => {
         message.error(e.message || '加载失败');
         setData(defaults);
-        form.setFieldsValue(defaults);
       })
       .finally(() => setLoading(false));
   };
@@ -188,8 +187,11 @@ export const Settings: React.FC = () => {
         showPopCode: values.general?.showPopCode ?? loadedGeneral.showPopCode ?? true,
         footerText: values.general?.footerText?.trim() || loadedGeneral.footerText || DEFAULT_FOOTER_TEXT,
         homeIntroText: values.general?.homeIntroText?.trim() || loadedGeneral.homeIntroText || DEFAULT_HOME_INTRO_TEXT,
+        /* 必须显式接受 default：否则从蓝/深色切回默认时，会错误沿用 loadedGeneral 里的旧值 */
         appearance:
-          values.general?.appearance === 'techBlue' || values.general?.appearance === 'dark'
+          values.general?.appearance === 'techBlue'
+          || values.general?.appearance === 'dark'
+          || values.general?.appearance === 'default'
             ? values.general.appearance
             : (loadedGeneral.appearance || 'default'),
       },
@@ -409,8 +411,8 @@ export const Settings: React.FC = () => {
         fontSize: 15,
         lineHeight: 1.45,
         fontWeight: activeSection === id ? 600 : 500,
-        background: activeSection === id ? 'rgba(37,99,235,0.08)' : 'transparent',
-        color: activeSection === id ? '#1d4ed8' : '#111827',
+        background: activeSection === id ? 'var(--lg-primary-soft)' : 'transparent',
+        color: activeSection === id ? 'var(--lg-primary)' : 'var(--lg-text)',
         cursor: 'pointer',
       }}
     >
@@ -446,7 +448,7 @@ export const Settings: React.FC = () => {
         <div
           style={{
             flex: '0 0 228px',
-            borderRight: '1px solid #e5e7eb',
+            borderRight: '1px solid var(--lg-border)',
             paddingRight: 16,
           }}
         >
@@ -474,7 +476,7 @@ export const Settings: React.FC = () => {
               <SettingsUsersPanel />
             </Card>
           ) : (
-            <Form form={form} layout="vertical" initialValues={defaults} disabled={!canEditSettings}>
+            <Form form={form} layout="vertical" initialValues={data} disabled={!canEditSettings}>
               {activeSection === 'general' && (
                 <Card title="通用设置" style={{ marginBottom: 16 }}>
                   <Form.Item
@@ -491,8 +493,8 @@ export const Settings: React.FC = () => {
                     <Select
                       options={[
                         { value: 'default', label: '默认主题' },
-                        { value: 'techBlue', label: '科技蓝（蓝绿白）' },
-                        { value: 'dark', label: '深色外观（沉稳护眼）' },
+                        { value: 'techBlue', label: '蓝色外观' },
+                        { value: 'dark', label: '深色外观' },
                       ]}
                     />
                   </Form.Item>
